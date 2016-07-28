@@ -50,7 +50,7 @@ public final class MapperProvider<T> implements Provider<T> {
 
     @Override
     public int hashCode() {
-      return Objects.hashCode(mapperType);
+      return Objects.hashCode(this.mapperType);
     }
 
     @Override

@@ -70,7 +70,7 @@ public final class TypeHandlerProvider<TH extends TypeHandler<? extends T>, T> i
 
     @Override
     public int hashCode() {
-      return Objects.hashCode(typeHandlerType, handledType);
+      return Objects.hashCode(this.typeHandlerType, this.handledType);
     }
 
     @Override
