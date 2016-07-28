@@ -20,6 +20,7 @@ import java.lang.reflect.Constructor;
 import org.apache.ibatis.type.TypeException;
 import org.apache.ibatis.type.TypeHandler;
 
+import com.google.common.base.Objects;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
@@ -65,5 +66,20 @@ public final class TypeHandlerProvider<TH extends TypeHandler<? extends T>, T> i
             }
         }
         return instance;
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hashCode(typeHandlerType, handledType);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if(obj == null){
+        return false;
+      }
+      TypeHandlerProvider other = (TypeHandlerProvider) obj;
+      return Objects.equal(this.typeHandlerType, other.typeHandlerType) &&
+        Objects.equal(this.handledType, other.handledType);
     }
 }
