@@ -37,6 +37,10 @@ public final class ConfigurationProviderProvisionListener implements ProvisionLi
     ConfigurationProvider configurationProvider = (ConfigurationProvider) provision.provision();
     this.action.perform(configurationProvider);
   }
+  
+  public static ConfigurationProviderProvisionListener create(final ConfigurationProviderProvisionAction action) {
+    return new ConfigurationProviderProvisionListener(action);
+  }
 
   public static <P extends Provider<? extends ConfigurationSetting>> ConfigurationProviderProvisionListener create(
       final P configurationSettingProvider, final Binder binder) {
@@ -68,9 +72,5 @@ public final class ConfigurationProviderProvisionListener implements ProvisionLi
         configurationProvider.addMapperConfigurationSetting(mapperConfigurationSetting);
       }
     });
-  }
-  
-  private static interface ConfigurationProviderProvisionAction {
-    void perform(ConfigurationProvider configurationProvider);
   }
 }

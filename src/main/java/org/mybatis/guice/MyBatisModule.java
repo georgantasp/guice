@@ -71,6 +71,7 @@ import org.mybatis.guice.configuration.settings.TypeHandlerConfigurationSettingP
 import org.mybatis.guice.configuration.settings.UseColumnLabelConfigurationSetting;
 import org.mybatis.guice.configuration.settings.UseGeneratedKeysConfigurationSetting;
 import org.mybatis.guice.environment.EnvironmentProvider;
+import org.mybatis.guice.provision.ConfigurationProviderProvisionAction;
 import org.mybatis.guice.provision.ConfigurationProviderProvisionListener;
 import org.mybatis.guice.provision.KeyMatcher;
 import org.mybatis.guice.session.SqlSessionFactoryProvider;
@@ -214,8 +215,14 @@ public abstract class MyBatisModule extends AbstractMyBatisModule {
    *
    * @param failFast the fail fast
    */
-  protected final void failFast(boolean failFast) {
-    bindBoolean("mybatis.configuration.failFast", failFast);
+  protected final void failFast(final boolean failFast) {
+    bindListener(KeyMatcher.create(ConfigurationProvider.class),
+        ConfigurationProviderProvisionListener.create(new ConfigurationProviderProvisionAction() {
+          @Override
+          public void perform(ConfigurationProvider configurationProvider) {
+            configurationProvider.setFailFast(failFast);
+          }
+        }));
   }
 
   /**
@@ -236,19 +243,15 @@ public abstract class MyBatisModule extends AbstractMyBatisModule {
     bindConfigurationSetting(new DefaultStatementTimeoutConfigurationSetting(defaultStatementTimeout));
   }
 
-  public void bindConfigurationSetting(final ConfigurationSetting configurationSetting) {
-    bindListener(KeyMatcher.create(Key.get(ConfigurationProvider.class)),
+  protected final void bindConfigurationSetting(final ConfigurationSetting configurationSetting) {
+    bindListener(KeyMatcher.create(ConfigurationProvider.class),
         ConfigurationProviderProvisionListener.create(configurationSetting));
   }
 
-  public <P extends Provider<? extends ConfigurationSetting>> void bindConfigurationSettingProvider(
+  protected final <P extends Provider<? extends ConfigurationSetting>> void bindConfigurationSettingProvider(
       P configurationSettingProvider) {
-    bindListener(KeyMatcher.create(Key.get(ConfigurationProvider.class)),
+    bindListener(KeyMatcher.create(ConfigurationProvider.class),
         ConfigurationProviderProvisionListener.create(configurationSettingProvider, binder()));
-  }
-
-  private final void bindBoolean(String name, boolean value) {
-    bindConstant().annotatedWith(named(name)).to(value);
   }
 
   /**
