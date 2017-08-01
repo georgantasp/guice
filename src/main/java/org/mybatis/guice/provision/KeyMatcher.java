@@ -34,7 +34,7 @@ public final class KeyMatcher<T> extends AbstractMatcher<Binding<?>> {
   public static <T> KeyMatcher<T> create(Key<T> key) {
     return new KeyMatcher<T>(key);
   }
-  
+
   public static <T> KeyMatcher<T> create(Class<T> type) {
     return new KeyMatcher<T>(Key.get(type));
   }

@@ -58,9 +58,11 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.mybatis.guice.configuration.settings.AliasConfigurationSetting;
 import org.mybatis.guice.configuration.settings.ConfigurationSetting;
+import org.mybatis.guice.configuration.settings.DatabaseIdProviderConfigurationSetting;
 import org.mybatis.guice.configuration.settings.InterceptorConfigurationSettingProvider;
 import org.mybatis.guice.configuration.settings.JavaTypeAndHandlerConfigurationSettingProvider;
 import org.mybatis.guice.configuration.settings.MapperConfigurationSetting;
+import org.mybatis.guice.configuration.settings.StringBoundConfigurationSetting;
 import org.mybatis.guice.configuration.settings.TypeHandlerConfigurationSettingProvider;
 
 public class ConfigurationProviderTest {
@@ -96,7 +98,9 @@ public class ConfigurationProviderTest {
         bind(Configuration.class).toProvider(configurationProvider);
       }
     });
-
+    StringBoundConfigurationSetting stringSetting = new StringBoundConfigurationSetting();
+    injector.injectMembers(stringSetting);
+    configurationProvider.addConfigurationSetting(stringSetting.get());
     Configuration configuration = injector.getInstance(Configuration.class);
 
     configuration.getMappedStatementNames(); // Test that configuration is valid.
@@ -151,19 +155,21 @@ public class ConfigurationProviderTest {
         bind(Interceptor.class).toInstance(interceptor);
       }
     });
-    configurationProvider
-        .addConfigurationSetting(new AliasConfigurationSetting("alias", Alias.class));
-    JavaTypeAndHandlerConfigurationSettingProvider aliasTypeHandlerSetting =
-        JavaTypeAndHandlerConfigurationSettingProvider.create(Alias.class, aliasTypeHandlerKey);
+    StringBoundConfigurationSetting stringSetting = new StringBoundConfigurationSetting();
+    injector.injectMembers(stringSetting);
+    configurationProvider.addConfigurationSetting(stringSetting.get());
+    configurationProvider.addConfigurationSetting(new AliasConfigurationSetting("alias", Alias.class));
+    JavaTypeAndHandlerConfigurationSettingProvider aliasTypeHandlerSetting = JavaTypeAndHandlerConfigurationSettingProvider
+        .create(Alias.class, aliasTypeHandlerKey);
     injector.injectMembers(aliasTypeHandlerSetting);
     configurationProvider.addConfigurationSetting(aliasTypeHandlerSetting.get());
-    TypeHandlerConfigurationSettingProvider humanTypeHandlerSetting =
-        new TypeHandlerConfigurationSettingProvider(Key.get(HumanTypeHandler.class));
+    TypeHandlerConfigurationSettingProvider humanTypeHandlerSetting = new TypeHandlerConfigurationSettingProvider(
+        Key.get(HumanTypeHandler.class));
     injector.injectMembers(humanTypeHandlerSetting);
     configurationProvider.addConfigurationSetting(humanTypeHandlerSetting.get());
     configurationProvider.addMapperConfigurationSetting(new MapperConfigurationSetting(TestMapper.class));
-    InterceptorConfigurationSettingProvider interceptorSetting =
-        new InterceptorConfigurationSettingProvider(Interceptor.class);
+    InterceptorConfigurationSettingProvider interceptorSetting = new InterceptorConfigurationSettingProvider(
+        Interceptor.class);
     injector.injectMembers(interceptorSetting);
     configurationProvider.addConfigurationSetting(interceptorSetting.get());
     configurationProvider.addConfigurationSetting((new ConfigurationSetting() {
@@ -172,6 +178,9 @@ public class ConfigurationProviderTest {
         configuration.setDefaultFetchSize(defaultFetchSize);
       }
     }));
+    DatabaseIdProviderConfigurationSetting databaseIdProviderSetting = new DatabaseIdProviderConfigurationSetting();
+    injector.injectMembers(databaseIdProviderSetting);
+    configurationProvider.addConfigurationSetting(databaseIdProviderSetting.get());
 
     Configuration configuration = injector.getInstance(Configuration.class);
 

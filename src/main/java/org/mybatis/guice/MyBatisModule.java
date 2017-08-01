@@ -55,6 +55,7 @@ import org.mybatis.guice.configuration.settings.AliasConfigurationSetting;
 import org.mybatis.guice.configuration.settings.AutoMappingBehaviorConfigurationSetting;
 import org.mybatis.guice.configuration.settings.CacheEnabledConfigurationSetting;
 import org.mybatis.guice.configuration.settings.ConfigurationSetting;
+import org.mybatis.guice.configuration.settings.DatabaseIdProviderConfigurationSetting;
 import org.mybatis.guice.configuration.settings.DefaultExecutorTypeConfigurationSetting;
 import org.mybatis.guice.configuration.settings.DefaultScriptingLanguageTypeConfigurationSetting;
 import org.mybatis.guice.configuration.settings.DefaultStatementTimeoutConfigurationSetting;
@@ -67,6 +68,7 @@ import org.mybatis.guice.configuration.settings.MapperConfigurationSetting;
 import org.mybatis.guice.configuration.settings.MultipleResultSetsEnabledConfigurationSetting;
 import org.mybatis.guice.configuration.settings.ObjectFactoryConfigurationSetting;
 import org.mybatis.guice.configuration.settings.ObjectWrapperFactoryConfigurationSetting;
+import org.mybatis.guice.configuration.settings.StringBoundConfigurationSetting;
 import org.mybatis.guice.configuration.settings.TypeHandlerConfigurationSettingProvider;
 import org.mybatis.guice.configuration.settings.UseColumnLabelConfigurationSetting;
 import org.mybatis.guice.configuration.settings.UseGeneratedKeysConfigurationSetting;
@@ -103,6 +105,8 @@ public abstract class MyBatisModule extends AbstractMyBatisModule {
 
   @Override
   final void internalConfigure() {
+    bindConfigurationSettingProvider(new StringBoundConfigurationSetting());
+
     try {
       initialize();
 
@@ -323,6 +327,7 @@ public abstract class MyBatisModule extends AbstractMyBatisModule {
   protected final void bindDatabaseIdProvider(Class<? extends DatabaseIdProvider> databaseIdProvider) {
     checkArgument(databaseIdProvider != null, "Parameter 'dataSourceProvider' must be not null");
     bind(DatabaseIdProvider.class).to(databaseIdProvider).in(Scopes.SINGLETON);
+    bindConfigurationSettingProvider(new DatabaseIdProviderConfigurationSetting());
   }
 
   /**

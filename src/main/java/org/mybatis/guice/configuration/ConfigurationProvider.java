@@ -15,24 +15,18 @@
  */
 package org.mybatis.guice.configuration;
 
-import com.google.inject.Injector;
 import com.google.inject.ProvisionException;
 import com.google.inject.name.Named;
 
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.annotation.Nullable;
 import javax.inject.Provider;
 import javax.inject.Singleton;
-import javax.sql.DataSource;
 
 import org.apache.ibatis.executor.ErrorContext;
-import org.apache.ibatis.mapping.DatabaseIdProvider;
 import org.apache.ibatis.mapping.Environment;
-import org.apache.ibatis.session.AutoMappingBehavior;
 import org.apache.ibatis.session.Configuration;
-import org.apache.ibatis.session.ExecutorType;
 import org.mybatis.guice.configuration.settings.ConfigurationSetting;
 import org.mybatis.guice.configuration.settings.MapperConfigurationSetting;
 
@@ -47,60 +41,9 @@ public class ConfigurationProvider implements Provider<Configuration> {
    */
   private final Environment environment;
 
-  @com.google.inject.Inject(optional = true)
-  @Named("mybatis.configuration.lazyLoadingEnabled")
-  private boolean lazyLoadingEnabled = false;
-
-  @com.google.inject.Inject(optional = true)
-  @Named("mybatis.configuration.aggressiveLazyLoading")
-  private boolean aggressiveLazyLoading = true;
-
-  @com.google.inject.Inject(optional = true)
-  @Named("mybatis.configuration.multipleResultSetsEnabled")
-  private boolean multipleResultSetsEnabled = true;
-
-  @com.google.inject.Inject(optional = true)
-  @Named("mybatis.configuration.useGeneratedKeys")
-  private boolean useGeneratedKeys = false;
-
-  @com.google.inject.Inject(optional = true)
-  @Named("mybatis.configuration.useColumnLabel")
-  private boolean useColumnLabel = true;
-
-  @com.google.inject.Inject(optional = true)
-  @Named("mybatis.configuration.cacheEnabled")
-  private boolean cacheEnabled = true;
-
-  @com.google.inject.Inject(optional = true)
-  @Named("mybatis.configuration.defaultExecutorType")
-  private ExecutorType defaultExecutorType = ExecutorType.SIMPLE;
-
-  @com.google.inject.Inject(optional = true)
-  @Named("mybatis.configuration.autoMappingBehavior")
-  private AutoMappingBehavior autoMappingBehavior = AutoMappingBehavior.PARTIAL;
-
-  @com.google.inject.Inject(optional = true)
-  @Named("mybatis.configuration.callSettersOnNulls")
-  private boolean callSettersOnNulls = false;
-
-  @com.google.inject.Inject(optional = true)
-  @Named("mybatis.configuration.defaultStatementTimeout")
-  @Nullable
-  private Integer defaultStatementTimeout;
-
-  @com.google.inject.Inject(optional = true)
-  @Named("mybatis.configuration.mapUnderscoreToCamelCase")
-  private boolean mapUnderscoreToCamelCase = false;
-
-  @com.google.inject.Inject(optional = true)
-  @Named("mybatis.configuration.failFast")
+  @com.google.inject.Inject(optional = true) // Annotation left in place for backward compatibility
+  @Named("mybatis.configuration.failFast") // Annotation left in place for backward compatibility
   private boolean failFast = false;
-
-  @com.google.inject.Inject(optional = true)
-  private DatabaseIdProvider databaseIdProvider;
-
-  @com.google.inject.Inject
-  private DataSource dataSource;
 
   private Set<ConfigurationSetting> configurationSettings = new HashSet<ConfigurationSetting>();
   private Set<MapperConfigurationSetting> mapperConfigurationSettings = new HashSet<MapperConfigurationSetting>();
@@ -115,7 +58,6 @@ public class ConfigurationProvider implements Provider<Configuration> {
 
   @Deprecated
   public void setEnvironment(Environment environment) {
-    // do nothing
   }
 
   /**
@@ -132,44 +74,18 @@ public class ConfigurationProvider implements Provider<Configuration> {
   public void addConfigurationSetting(ConfigurationSetting configurationSetting) {
     this.configurationSettings.add(configurationSetting);
   }
-  
+
   public void addMapperConfigurationSetting(MapperConfigurationSetting mapperConfigurationSetting) {
     this.mapperConfigurationSettings.add((MapperConfigurationSetting) mapperConfigurationSetting);
   }
 
-  /**
-   * New configuration.
-   *
-   * @param environment
-   *          the environment
-   * @return new configuration
-   */
-  protected Configuration newConfiguration(Environment environment) {
-    return new Configuration(environment);
-  }
-
   @Override
   public Configuration get() {
-    final Configuration configuration = newConfiguration(environment);
-    configuration.setLazyLoadingEnabled(lazyLoadingEnabled);
-    configuration.setAggressiveLazyLoading(aggressiveLazyLoading);
-    configuration.setMultipleResultSetsEnabled(multipleResultSetsEnabled);
-    configuration.setUseGeneratedKeys(useGeneratedKeys);
-    configuration.setUseColumnLabel(useColumnLabel);
-    configuration.setCacheEnabled(cacheEnabled);
-    configuration.setDefaultExecutorType(defaultExecutorType);
-    configuration.setAutoMappingBehavior(autoMappingBehavior);
-    configuration.setCallSettersOnNulls(callSettersOnNulls);
-    configuration.setDefaultStatementTimeout(defaultStatementTimeout);
-    configuration.setMapUnderscoreToCamelCase(mapUnderscoreToCamelCase);
-
-    for (ConfigurationSetting setting : configurationSettings) {
-      setting.applyConfigurationSetting(configuration);
-    }
+    final Configuration configuration = new Configuration(environment);
 
     try {
-      if (databaseIdProvider != null) {
-        configuration.setDatabaseId(databaseIdProvider.getDatabaseId(dataSource));
+      for (ConfigurationSetting setting : configurationSettings) {
+        setting.applyConfigurationSetting(configuration);
       }
 
       for (MapperConfigurationSetting setting : mapperConfigurationSettings) {

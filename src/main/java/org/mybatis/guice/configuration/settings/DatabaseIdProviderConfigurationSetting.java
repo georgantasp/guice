@@ -13,32 +13,37 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package org.mybatis.guice.customconfiguration;
+package org.mybatis.guice.configuration.settings;
 
-import com.google.inject.Inject;
+import java.sql.SQLException;
 
+import javax.inject.Inject;
 import javax.inject.Provider;
+import javax.sql.DataSource;
 
-import org.apache.ibatis.mapping.Environment;
+import org.apache.ibatis.mapping.DatabaseIdProvider;
 import org.apache.ibatis.session.Configuration;
 
-public class MyConfigurationProvider implements Provider<Configuration> {
-
-  //  /**
-  //   * @param environment
-  //   * @since 1.0.1
-  //   */
-  //  @Inject
-  //  public MyConfigurationProvider(Environment environment) {
-  //    super(environment);
-  //  }
+public class DatabaseIdProviderConfigurationSetting implements Provider<ConfigurationSetting> {
 
   @Inject
-  Environment environment;
+  DataSource dataSource;
+  @Inject
+  DatabaseIdProvider provider;
 
   @Override
-  public Configuration get() {
-    // TODO Auto-generated method stub
-    return new MyConfiguration(environment);
+  public ConfigurationSetting get() {
+    return new ConfigurationSetting() {
+
+      @Override
+      public void applyConfigurationSetting(Configuration configuration) {
+        try {
+          configuration.setDatabaseId(provider.getDatabaseId(dataSource));
+        } catch (SQLException e) {
+          throw new RuntimeException(e);
+        }
+      }
+    };
   }
+
 }
