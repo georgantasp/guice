@@ -19,6 +19,7 @@ import static com.google.inject.name.Names.named;
 import static com.google.inject.util.Providers.guicify;
 import static org.mybatis.guice.Preconditions.checkArgument;
 
+import com.google.inject.AbstractModule;
 import com.google.inject.Key;
 import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
@@ -43,11 +44,15 @@ import org.apache.ibatis.session.AutoMappingBehavior;
 import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.session.ExecutorType;
 import org.apache.ibatis.session.LocalCacheScope;
+import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
+import org.apache.ibatis.session.SqlSessionManager;
 import org.apache.ibatis.transaction.TransactionFactory;
 import org.apache.ibatis.type.Alias;
 import org.apache.ibatis.type.TypeHandler;
 import org.mybatis.guice.binder.AliasBinder;
+import org.mybatis.guice.binder.DefaultTransactionInterceptorBinder;
+import org.mybatis.guice.binder.TransactionInterceptorBinder;
 import org.mybatis.guice.binder.TypeHandlerBinder;
 import org.mybatis.guice.configuration.ConfigurationProvider;
 import org.mybatis.guice.configuration.settings.AggressiveLazyLoadingConfigurationSetting;
@@ -78,13 +83,14 @@ import org.mybatis.guice.provision.ConfigurationProviderProvisionAction;
 import org.mybatis.guice.provision.ConfigurationProviderProvisionListener;
 import org.mybatis.guice.provision.KeyMatcher;
 import org.mybatis.guice.session.SqlSessionFactoryProvider;
+import org.mybatis.guice.session.SqlSessionManagerProvider;
 import org.mybatis.guice.type.TypeHandlerProvider;
 
 /**
  * Easy to use helper Module that alleviates users to write the boilerplate
  * google-guice bindings to create the SqlSessionFactory.
  */
-public abstract class MyBatisModule extends AbstractMyBatisModule {
+public abstract class MyBatisModule extends AbstractModule {
 
   /**
    * The ObjectFactory class reference.
@@ -103,17 +109,16 @@ public abstract class MyBatisModule extends AbstractMyBatisModule {
   private Class<? extends Provider<? extends SqlSessionFactory>> sqlSessionFactoryProviderType = SqlSessionFactoryProvider.class;
 
   private Class<? extends Provider<? extends Configuration>> configurationProviderType = ConfigurationProvider.class;
+  
+  protected TransactionInterceptorBinder interceptorBinder = new DefaultTransactionInterceptorBinder();
 
+  protected abstract void initialize();
+  
   @Override
-  final void internalConfigure() {
+  protected final void configure() {
     bindConfigurationSettingProvider(new StringBoundConfigurationSetting());
 
-    try {
-      initialize();
-
-    } finally {
-
-    }
+    initialize();
 
     // fixed bindings
     bind(Environment.class).toProvider(EnvironmentProvider.class).in(Scopes.SINGLETON);
@@ -121,6 +126,8 @@ public abstract class MyBatisModule extends AbstractMyBatisModule {
     // replaceable bindings.
     bind(Configuration.class).toProvider(configurationProviderType).in(Scopes.SINGLETON);
     bind(SqlSessionFactory.class).toProvider(sqlSessionFactoryProviderType);
+    bind(SqlSessionManager.class).toProvider(SqlSessionManagerProvider.class).in(Scopes.SINGLETON);
+    bind(SqlSession.class).to(SqlSessionManager.class).in(Scopes.SINGLETON);
 
     // parametric bindings
     bind(ObjectFactory.class).to(objectFactoryType).in(Scopes.SINGLETON);
@@ -129,6 +136,8 @@ public abstract class MyBatisModule extends AbstractMyBatisModule {
     bindConfigurationSettingProvider(new ObjectFactoryConfigurationSetting(objectFactoryType));
     bindConfigurationSettingProvider(new ObjectWrapperFactoryConfigurationSetting(objectWrapperFactoryType));
     bindConfigurationSetting(new DefaultScriptingLanguageTypeConfigurationSetting(defaultScriptingLanguageType));
+    
+    interceptorBinder.bindTransactionInterceptors(binder());
   }
 
   /**

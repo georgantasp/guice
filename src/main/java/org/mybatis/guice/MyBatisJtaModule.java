@@ -25,12 +25,13 @@ import javax.transaction.xa.XAResource;
 import org.apache.ibatis.transaction.TransactionFactory;
 import org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory;
 import org.apache.ibatis.transaction.managed.ManagedTransactionFactory;
+import org.mybatis.guice.binder.DefaultTransactionInterceptorBinder;
 import org.mybatis.guice.binder.JtaTransactionInterceptorBinder;
 
 public abstract class MyBatisJtaModule extends MyBatisModule {
-
-
+  
   public MyBatisJtaModule() {
+    this.interceptorBinder = new DefaultTransactionInterceptorBinder();
   }
 
   public MyBatisJtaModule(TransactionManager transactionManager) {

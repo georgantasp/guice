@@ -19,6 +19,7 @@ import static com.google.inject.util.Providers.guicify;
 import static org.apache.ibatis.io.Resources.getResourceAsReader;
 import static org.mybatis.guice.Preconditions.checkArgument;
 
+import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 
 import java.io.IOException;
@@ -28,16 +29,21 @@ import java.util.Properties;
 
 import org.apache.ibatis.plugin.Interceptor;
 import org.apache.ibatis.session.Configuration;
+import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
+import org.apache.ibatis.session.SqlSessionManager;
 import org.apache.ibatis.type.TypeHandler;
+import org.mybatis.guice.binder.DefaultTransactionInterceptorBinder;
+import org.mybatis.guice.binder.TransactionInterceptorBinder;
 import org.mybatis.guice.mappers.MapperProvider;
+import org.mybatis.guice.session.SqlSessionManagerProvider;
 
 /**
  * Easy to use helper Module that alleviates users to write the boilerplate
  * google-guice bindings to create the SqlSessionFactory, via XML configuration.
  */
-public abstract class XMLMyBatisModule extends AbstractMyBatisModule {
+public abstract class XMLMyBatisModule extends AbstractModule {
 
   private static final String DEFAULT_CONFIG_RESOURCE = "mybatis-config.xml";
 
@@ -80,17 +86,31 @@ public abstract class XMLMyBatisModule extends AbstractMyBatisModule {
   }
 
   /**
-   * {@inheritDoc}
+   * Use resource class loader.
+   *
+   * @param resourceClassLoader the resource class loader
+   * @since 3.3
    */
+  public void useResourceClassLoader(ClassLoader resourceClassLoader) {
+    this.resourcesClassLoader = resourceClassLoader;
+  }
+
+  protected TransactionInterceptorBinder interceptorBinder = new DefaultTransactionInterceptorBinder();
+  private ClassLoader resourcesClassLoader = getClass().getClassLoader();
+  
+  protected abstract void initialize();
+  
   @Override
-  final void internalConfigure() {
+  protected final void configure() {
     this.initialize();
 
     Reader reader = null;
     try {
-      reader = getResourceAsReader(getResourceClassLoader(), classPathResource);
+      reader = getResourceAsReader(resourcesClassLoader, classPathResource);
       SqlSessionFactory sessionFactory = new SqlSessionFactoryBuilder().build(reader, environmentId, properties);
       bind(SqlSessionFactory.class).toInstance(sessionFactory);
+      bind(SqlSessionManager.class).toProvider(SqlSessionManagerProvider.class).in(Scopes.SINGLETON);
+      bind(SqlSession.class).to(SqlSessionManager.class).in(Scopes.SINGLETON);
 
       Configuration configuration = sessionFactory.getConfiguration();
 
@@ -129,6 +149,8 @@ public abstract class XMLMyBatisModule extends AbstractMyBatisModule {
         }
       }
     }
+
+    interceptorBinder.bindTransactionInterceptors(binder());
   }
 
   private final <T> void bindMapper(Class<T> mapperType) {

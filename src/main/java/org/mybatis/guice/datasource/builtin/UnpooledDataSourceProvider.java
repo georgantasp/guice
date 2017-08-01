@@ -23,6 +23,7 @@ import javax.inject.Named;
 import javax.inject.Provider;
 import javax.sql.DataSource;
 
+import org.apache.ibatis.datasource.pooled.PooledDataSource;
 import org.apache.ibatis.datasource.unpooled.UnpooledDataSource;
 
 /**
@@ -43,9 +44,12 @@ public final class UnpooledDataSourceProvider implements Provider<DataSource> {
    * @param driverClassLoader ClassLoader to use to load JDBC driver class.
    */
   @Inject
-  public UnpooledDataSourceProvider(@Named("JDBC.driver") final String driver, @Named("JDBC.url") final String url,
-      @Named("JDBC.driverClassLoader") final ClassLoader driverClassLoader) {
-    unpooledDataSource = new UnpooledDataSource(driverClassLoader, driver, url, null, null);
+  public UnpooledDataSourceProvider(final BuiltinDataSourceProviderArguments args) {
+    if(args.driverClassLoader != null) {
+      unpooledDataSource = new UnpooledDataSource(args.driverClassLoader, args.driver, args.url, null, null);
+    }else {
+      unpooledDataSource = new UnpooledDataSource(args.driver, args.url, null, null);
+    }
   }
 
   /**
