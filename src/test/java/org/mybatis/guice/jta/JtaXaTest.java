@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.PrivateModule;
+import com.google.inject.util.Providers;
 
 public class JtaXaTest {
   private static final Logger LOGGER = LoggerFactory.getLogger(JtaXaTest.class);
@@ -86,7 +87,7 @@ public class JtaXaTest {
           @Override
           protected void initialize() {
             environmentId("db1");
-            bindDataSourceProvider(new ProviderImpl<DataSource>(dataSource1));
+            bindDataSourceProvider(Providers.of(dataSource1));
             bindDefaultTransactionProvider();
             bindDatabaseIdProvider(new VendorDatabaseIdProvider());
 
@@ -107,7 +108,7 @@ public class JtaXaTest {
           @Override
           protected void initialize() {
             environmentId("db2");
-            bindDataSourceProvider(new ProviderImpl<DataSource>(dataSource2));
+            bindDataSourceProvider(Providers.of(dataSource2));
             bindDefaultTransactionProvider();
             bindDatabaseIdProvider(new VendorDatabaseIdProvider());
 

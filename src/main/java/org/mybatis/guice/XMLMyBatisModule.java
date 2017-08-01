@@ -15,8 +15,11 @@
  */
 package org.mybatis.guice;
 
+import static com.google.inject.util.Providers.guicify;
 import static org.apache.ibatis.io.Resources.getResourceAsReader;
 import static org.mybatis.guice.Preconditions.checkArgument;
+
+import com.google.inject.Scopes;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -28,6 +31,7 @@ import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.apache.ibatis.type.TypeHandler;
+import org.mybatis.guice.mappers.MapperProvider;
 
 /**
  * Easy to use helper Module that alleviates users to write the boilerplate
@@ -127,4 +131,7 @@ public abstract class XMLMyBatisModule extends AbstractMyBatisModule {
     }
   }
 
+  private final <T> void bindMapper(Class<T> mapperType) {
+    bind(mapperType).toProvider(guicify(new MapperProvider<T>(mapperType))).in(Scopes.SINGLETON);
+  }
 }

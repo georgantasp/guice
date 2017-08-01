@@ -17,6 +17,11 @@ package org.mybatis.guice.jta;
 
 import static org.junit.Assert.assertTrue;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.PrivateModule;
+import com.google.inject.util.Providers;
+
 import javax.sql.DataSource;
 
 import org.apache.aries.transaction.AriesTransactionManager;
@@ -33,10 +38,6 @@ import org.junit.rules.TestName;
 import org.mybatis.guice.MyBatisJtaModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.PrivateModule;
 
 public class JtaCustomXaResourceTest {
   private static final Logger LOGGER = LoggerFactory.getLogger(JtaCustomXaResourceTest.class);
@@ -82,7 +83,7 @@ public class JtaCustomXaResourceTest {
           @Override
           protected void initialize() {
             environmentId("db2");
-            bindDataSourceProvider(new ProviderImpl<DataSource>(dataSource2));
+            bindDataSourceProvider(Providers.of(dataSource2));
             bindDefaultTransactionProvider();
             bindDatabaseIdProvider(new VendorDatabaseIdProvider());
             bindXAResourceProvider(CustomXaResourceProvider.class);

@@ -73,6 +73,7 @@ import org.mybatis.guice.configuration.settings.TypeHandlerConfigurationSettingP
 import org.mybatis.guice.configuration.settings.UseColumnLabelConfigurationSetting;
 import org.mybatis.guice.configuration.settings.UseGeneratedKeysConfigurationSetting;
 import org.mybatis.guice.environment.EnvironmentProvider;
+import org.mybatis.guice.mappers.MapperProvider;
 import org.mybatis.guice.provision.ConfigurationProviderProvisionAction;
 import org.mybatis.guice.provision.ConfigurationProviderProvisionListener;
 import org.mybatis.guice.provision.KeyMatcher;
@@ -613,12 +614,13 @@ public abstract class MyBatisModule extends AbstractMyBatisModule {
    *
    * @param mapperClass the user defined mapper classes.
    */
-  protected final void addMapperClass(Class<?> mapperClass) {
+  protected final <T> void addMapperClass(Class<T> mapperClass) {
     checkArgument(mapperClass != null, "Parameter 'mapperClass' must not be null");
 
     bindListener(KeyMatcher.create(Key.get(ConfigurationProvider.class)),
         ConfigurationProviderProvisionListener.create(new MapperConfigurationSetting(mapperClass)));
-    bindMapper(mapperClass);
+    
+    bind(mapperClass).toProvider(guicify(new MapperProvider<T>(mapperClass))).in(Scopes.SINGLETON);
   }
 
   /**

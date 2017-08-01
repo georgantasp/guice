@@ -17,6 +17,11 @@ package org.mybatis.guice.jta;
 
 import static org.junit.Assert.assertEquals;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.PrivateModule;
+import com.google.inject.util.Providers;
+
 import java.util.List;
 
 import javax.sql.DataSource;
@@ -35,10 +40,6 @@ import org.junit.rules.TestName;
 import org.mybatis.guice.MyBatisJtaModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.PrivateModule;
 
 public class JtaLocalTest {
   private static final Logger LOGGER = LoggerFactory.getLogger(JtaLocalTest.class);
@@ -87,7 +88,7 @@ public class JtaLocalTest {
           @Override
           protected void initialize() {
             environmentId("db1");
-            bindDataSourceProvider(new ProviderImpl<DataSource>(dataSource1));
+            bindDataSourceProvider(Providers.of(dataSource1));
             bindDefaultTransactionProvider();
             bindDatabaseIdProvider(new VendorDatabaseIdProvider());
 
@@ -108,7 +109,7 @@ public class JtaLocalTest {
           @Override
           protected void initialize() {
             environmentId("db2");
-            bindDataSourceProvider(new ProviderImpl<DataSource>(dataSource2));
+            bindDataSourceProvider(Providers.of(dataSource2));
             bindDefaultTransactionProvider();
             bindDatabaseIdProvider(new VendorDatabaseIdProvider());
 

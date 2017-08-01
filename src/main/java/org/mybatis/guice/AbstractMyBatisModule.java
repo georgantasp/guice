@@ -15,45 +15,25 @@
  */
 package org.mybatis.guice;
 
-import static com.google.inject.matcher.Matchers.annotatedWith;
-import static com.google.inject.matcher.Matchers.any;
-import static com.google.inject.matcher.Matchers.not;
 import static com.google.inject.name.Names.named;
-import static com.google.inject.util.Providers.guicify;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Binder;
 import com.google.inject.Scopes;
-import com.google.inject.matcher.AbstractMatcher;
-
-import java.lang.reflect.Method;
 
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionManager;
-import org.mybatis.guice.mappers.MapperProvider;
+import org.mybatis.guice.binder.DefaultTransactionInterceptorBinder;
+import org.mybatis.guice.binder.TransactionInterceptorBinder;
 import org.mybatis.guice.session.SqlSessionManagerProvider;
-import org.mybatis.guice.transactional.Transactional;
-import org.mybatis.guice.transactional.TransactionalMethodInterceptor;
 
 abstract class AbstractMyBatisModule extends AbstractModule {
-
-  protected static final AbstractMatcher<Method> DECLARED_BY_OBJECT = new AbstractMatcher<Method>() {
-    @Override
-    public boolean matches(Method method) {
-      return method.getDeclaringClass() == Object.class;
-    }
-  };
-
-  protected static final AbstractMatcher<Method> SYNTHETIC = new AbstractMatcher<Method>() {
-    @Override
-    public boolean matches(Method method) {
-      return method.isSynthetic();
-    }
-  };
 
   private ClassLoader resourcesClassLoader = getDefaultClassLoader();
 
   private ClassLoader driverClassLoader = getDefaultClassLoader();
+  
+  protected TransactionInterceptorBinder interceptorBinder = new DefaultTransactionInterceptorBinder();
 
   @Override
   protected final void configure() {
@@ -64,39 +44,13 @@ abstract class AbstractMyBatisModule extends AbstractModule {
 
       internalConfigure();
 
-      bindTransactionInterceptors();
+      interceptorBinder.bindTransactionInterceptors(binder());
 
       bind(ClassLoader.class).annotatedWith(named("JDBC.driverClassLoader")).toInstance(driverClassLoader);
     } finally {
       resourcesClassLoader = getDefaultClassLoader();
       driverClassLoader = getDefaultClassLoader();
     }
-  }
-
-  /**
-   * bind transactional interceptors.
-   */
-  protected void bindTransactionInterceptors() {
-    // transactional interceptor
-    TransactionalMethodInterceptor interceptor = new TransactionalMethodInterceptor();
-    requestInjection(interceptor);
-    bindInterceptor(any(), not(SYNTHETIC).and(not(DECLARED_BY_OBJECT)).and(annotatedWith(Transactional.class)),
-        interceptor);
-    // Intercept classes annotated with Transactional, but avoid "double"
-    // interception when a mathod is also annotated inside an annotated
-    // class.
-    bindInterceptor(annotatedWith(Transactional.class),
-        not(SYNTHETIC).and(not(DECLARED_BY_OBJECT)).and(not(annotatedWith(Transactional.class))), interceptor);
-  }
-
-  /**
-   * Bind mapper.
-   *
-   * @param <T> the generic type
-   * @param mapperType the mapper type
-   */
-  final <T> void bindMapper(Class<T> mapperType) {
-    bind(mapperType).toProvider(guicify(new MapperProvider<T>(mapperType))).in(Scopes.SINGLETON);
   }
 
   /**
