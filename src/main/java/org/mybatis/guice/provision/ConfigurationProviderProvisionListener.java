@@ -27,9 +27,9 @@ import org.mybatis.guice.configuration.settings.MapperConfigurationSetting;
 
 public final class ConfigurationProviderProvisionListener implements ProvisionListener {
 
-  private final ConfigurationProviderProvisionAction action;
+  private final ProvisionAction<ConfigurationProvider> action;
 
-  ConfigurationProviderProvisionListener(ConfigurationProviderProvisionAction action) {
+  ConfigurationProviderProvisionListener(ProvisionAction<ConfigurationProvider> action) {
     this.action = action;
   }
 
@@ -39,7 +39,7 @@ public final class ConfigurationProviderProvisionListener implements ProvisionLi
     this.action.perform(configurationProvider);
   }
 
-  public static ConfigurationProviderProvisionListener create(final ConfigurationProviderProvisionAction action) {
+  public static ConfigurationProviderProvisionListener create(final ProvisionAction<ConfigurationProvider> action) {
     return new ConfigurationProviderProvisionListener(action);
   }
 
@@ -48,7 +48,7 @@ public final class ConfigurationProviderProvisionListener implements ProvisionLi
     @SuppressWarnings("unchecked")
     final MembersInjector<P> membersInjector = (MembersInjector<P>) binder
         .getMembersInjector(configurationSettingProvider.getClass());
-    return new ConfigurationProviderProvisionListener(new ConfigurationProviderProvisionAction() {
+    return new ConfigurationProviderProvisionListener(new ProvisionAction<ConfigurationProvider>() {
       @Override
       public void perform(ConfigurationProvider configurationProvider) {
         membersInjector.injectMembers(configurationSettingProvider);
@@ -58,7 +58,7 @@ public final class ConfigurationProviderProvisionListener implements ProvisionLi
   }
 
   public static ConfigurationProviderProvisionListener create(final ConfigurationSetting configurationSetting) {
-    return new ConfigurationProviderProvisionListener(new ConfigurationProviderProvisionAction() {
+    return new ConfigurationProviderProvisionListener(new ProvisionAction<ConfigurationProvider>() {
       @Override
       public void perform(ConfigurationProvider configurationProvider) {
         configurationProvider.addConfigurationSetting(configurationSetting);
@@ -68,7 +68,7 @@ public final class ConfigurationProviderProvisionListener implements ProvisionLi
 
   public static ConfigurationProviderProvisionListener create(
       final MapperConfigurationSetting mapperConfigurationSetting) {
-    return new ConfigurationProviderProvisionListener(new ConfigurationProviderProvisionAction() {
+    return new ConfigurationProviderProvisionListener(new ProvisionAction<ConfigurationProvider>() {
       @Override
       public void perform(ConfigurationProvider configurationProvider) {
         configurationProvider.addMapperConfigurationSetting(mapperConfigurationSetting);

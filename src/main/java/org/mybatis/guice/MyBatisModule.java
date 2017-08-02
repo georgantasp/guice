@@ -15,7 +15,6 @@
  */
 package org.mybatis.guice;
 
-import static com.google.inject.name.Names.named;
 import static com.google.inject.util.Providers.guicify;
 import static org.mybatis.guice.Preconditions.checkArgument;
 
@@ -23,6 +22,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Key;
 import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
+import com.google.inject.spi.ProvisionListener;
 
 import java.util.Collection;
 import java.util.Set;
@@ -79,9 +79,10 @@ import org.mybatis.guice.configuration.settings.UseColumnLabelConfigurationSetti
 import org.mybatis.guice.configuration.settings.UseGeneratedKeysConfigurationSetting;
 import org.mybatis.guice.environment.EnvironmentProvider;
 import org.mybatis.guice.mappers.MapperProvider;
-import org.mybatis.guice.provision.ConfigurationProviderProvisionAction;
 import org.mybatis.guice.provision.ConfigurationProviderProvisionListener;
+import org.mybatis.guice.provision.EnvironmentProviderProvisionListener;
 import org.mybatis.guice.provision.KeyMatcher;
+import org.mybatis.guice.provision.ProvisionAction;
 import org.mybatis.guice.session.SqlSessionFactoryProvider;
 import org.mybatis.guice.session.SqlSessionManagerProvider;
 import org.mybatis.guice.type.TypeHandlerProvider;
@@ -145,9 +146,15 @@ public abstract class MyBatisModule extends AbstractModule {
    *
    * @param environmentId the MyBatis configuration environment id
    */
-  protected final void environmentId(String environmentId) {
+  protected final void environmentId(final String environmentId) {
     checkArgument(environmentId != null, "Parameter 'environmentId' must be not null");
-    bindConstant().annotatedWith(named("mybatis.environment.id")).to(environmentId);
+    bindListener(KeyMatcher.create(EnvironmentProvider.class),
+        EnvironmentProviderProvisionListener.create(new ProvisionAction<EnvironmentProvider>() {
+          @Override
+          public void perform(EnvironmentProvider environmentProvider) {
+            environmentProvider.setId(environmentId);
+          }
+        }));
   }
 
   /**
@@ -231,7 +238,7 @@ public abstract class MyBatisModule extends AbstractModule {
    */
   protected final void failFast(final boolean failFast) {
     bindListener(KeyMatcher.create(ConfigurationProvider.class),
-        ConfigurationProviderProvisionListener.create(new ConfigurationProviderProvisionAction() {
+        ConfigurationProviderProvisionListener.create(new ProvisionAction<ConfigurationProvider>() {
           @Override
           public void perform(ConfigurationProvider configurationProvider) {
             configurationProvider.setFailFast(failFast);

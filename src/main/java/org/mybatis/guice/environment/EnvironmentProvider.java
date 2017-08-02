@@ -15,7 +15,8 @@
  */
 package org.mybatis.guice.environment;
 
-import javax.inject.Inject;
+import com.google.inject.Inject;
+
 import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
@@ -33,7 +34,7 @@ public final class EnvironmentProvider implements Provider<Environment> {
   /**
    * The environment id.
    */
-  @Inject
+  @Inject(optional = true)
   @Named("mybatis.environment.id")
   private String id;
 
